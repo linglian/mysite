@@ -1,7 +1,40 @@
 # coding=utf-8
 from django.http import HttpResponse
 import json
+my_id = 99
 
+def pre_cloth(request):
+    from multiprocessing.connection import Client
+    from multiprocessing.connection import Listener
+
+    resp = {
+        'info': '',
+        'body': {}}
+
+    if request.method == 'GET':
+        img = request.GET['img']
+        c = Client('/usr/local/server%d.temp' % my_id, authkey=b'lee123456')
+        # 将信息传送给服务端
+        c.send(['-f', img])
+        # 等待服务端处理结果
+        ar = c.recv()
+        is_Ok = False
+        t_idx = 0
+        for idx, i in enumerate(ar):
+            if i == 'Next':
+                is_Ok = True
+            elif is_Ok:
+                t_idx = idx
+                break
+        class_name_list = ar[t_idx]
+        file_path_list = ar[t_idx + 1]
+        feature_list = ar[t_idx + 2]
+        featrue = ar[t_idx + 3]
+        resp['body']['class_name_list'] = class_name_list
+        resp['body']['file_path_list'] = file_path_list
+        resp['body']['feature_list'] = feature_list
+        resp['body']['featrue'] = featrue
+    return HttpResponse(json.dumps(resp), content_type="application/json")
 
 def get(request):
     resp = {
